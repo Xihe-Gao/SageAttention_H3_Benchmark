@@ -1,0 +1,1213 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-27T23:31:37.280494+00:00",
+  "benchmark_scope": "end-to-end GPU kernels; excludes disk I/O and CPU-to-GPU load",
+  "timing": "CUDA Events; warmup excluded; arithmetic mean over repeats",
+  "reference": "torch.nn.functional.scaled_dot_product_attention BF16 output",
+  "relative_l2": "||candidate.float-reference.float||_2 / ||reference.float||_2",
+  "warmup": 2,
+  "repeats": 5,
+  "seq_limit": null,
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "compute_capability": [
+      12,
+      0
+    ],
+    "torch": "2.10.0+cu130",
+    "torch_cuda": "13.0",
+    "python": "3.12.13",
+    "sageattention_repo": "/workspace/SageAttention",
+    "sageattention_commit": "d1a57a546c3d395b1ffcbeecc66d81db76f3b4b5",
+    "sageattention_branch": "feature/qk-fp8-pv-fp8"
+  },
+  "samples": [
+    {
+      "sample": "step_05_layer_03",
+      "step": 5,
+      "layer": 3,
+      "sigma": 0.9729729890823364,
+      "shape": [
+        1,
+        56,
+        73923,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "methods": {
+        "bf16_sdpa": {
+          "mean_ms": 710.6749267578125,
+          "median_ms": 711.0538330078125,
+          "min_ms": 709.0615234375,
+          "max_ms": 711.4700927734375,
+          "stdev_ms": 0.9479773718352401,
+          "times_ms": [
+            709.0615234375,
+            710.6504516601562,
+            711.1387329101562,
+            711.0538330078125,
+            711.4700927734375
+          ],
+          "relative_l2": 0.0
+        },
+        "int8_qk_fp8_pv": {
+          "mean_ms": 288.5984191894531,
+          "median_ms": 288.8766784667969,
+          "min_ms": 287.2057800292969,
+          "max_ms": 289.24755859375,
+          "stdev_ms": 0.8088585289332217,
+          "times_ms": [
+            287.2057800292969,
+            289.0188293457031,
+            288.64324951171875,
+            289.24755859375,
+            288.8766784667969
+          ],
+          "relative_l2": 0.02363733652945033
+        },
+        "fp8_qk_fp8_pv": {
+          "mean_ms": 357.5893859863281,
+          "median_ms": 357.6626892089844,
+          "min_ms": 357.1816101074219,
+          "max_ms": 357.7323913574219,
+          "stdev_ms": 0.23099483640274876,
+          "times_ms": [
+            357.1816101074219,
+            357.7323913574219,
+            357.6463928222656,
+            357.6626892089844,
+            357.7238464355469
+          ],
+          "relative_l2": 0.05856704393438157
+        },
+        "fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 399.95897216796874,
+          "median_ms": 400.0074462890625,
+          "min_ms": 399.8244934082031,
+          "max_ms": 400.0447082519531,
+          "stdev_ms": 0.09933923479578839,
+          "times_ms": [
+            399.8244934082031,
+            399.8826599121094,
+            400.0074462890625,
+            400.0355529785156,
+            400.0447082519531
+          ],
+          "relative_l2": 0.05853741059999885
+        },
+        "fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 358.4311279296875,
+          "median_ms": 358.4018249511719,
+          "min_ms": 358.3878173828125,
+          "max_ms": 358.4996032714844,
+          "stdev_ms": 0.05286106327314006,
+          "times_ms": [
+            358.3899230957031,
+            358.4018249511719,
+            358.3878173828125,
+            358.4764709472656,
+            358.4996032714844
+          ],
+          "relative_l2": 0.05808871435807586
+        },
+        "fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 404.0699096679688,
+          "median_ms": 404.0318298339844,
+          "min_ms": 403.99041748046875,
+          "max_ms": 404.1871337890625,
+          "stdev_ms": 0.07921756491912668,
+          "times_ms": [
+            404.0318298339844,
+            403.99041748046875,
+            404.0277099609375,
+            404.1124572753906,
+            404.1871337890625
+          ],
+          "relative_l2": 0.058057837459961445
+        },
+        "sim_int8_qk_fp8_pv": {
+          "mean_ms": 22324.8359375,
+          "median_ms": 22324.8359375,
+          "min_ms": 22324.8359375,
+          "max_ms": 22324.8359375,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            22324.8359375
+          ],
+          "relative_l2": 0.02363889176867554,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "mean_ms": 21972.248046875,
+          "median_ms": 21972.248046875,
+          "min_ms": 21972.248046875,
+          "max_ms": 21972.248046875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21972.248046875
+          ],
+          "relative_l2": 0.05857123749992656,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 25374.859375,
+          "median_ms": 25374.859375,
+          "min_ms": 25374.859375,
+          "max_ms": 25374.859375,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25374.859375
+          ],
+          "relative_l2": 0.05854156708107641,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 21927.22265625,
+          "median_ms": 21927.22265625,
+          "min_ms": 21927.22265625,
+          "max_ms": 21927.22265625,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21927.22265625
+          ],
+          "relative_l2": 0.05808853157679064,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 25420.337890625,
+          "median_ms": 25420.337890625,
+          "min_ms": 25420.337890625,
+          "max_ms": 25420.337890625,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25420.337890625
+          ],
+          "relative_l2": 0.058057569979316714,
+          "measurement_kind": "single_full_simulation_run"
+        }
+      },
+      "wall_seconds": 22.11777138710022,
+      "kernel_wall_seconds": 21.08296489715576
+    },
+    {
+      "sample": "step_05_layer_25",
+      "step": 5,
+      "layer": 25,
+      "sigma": 0.9729729890823364,
+      "shape": [
+        1,
+        56,
+        73923,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "methods": {
+        "bf16_sdpa": {
+          "mean_ms": 715.96513671875,
+          "median_ms": 716.0896606445312,
+          "min_ms": 715.372314453125,
+          "max_ms": 716.4024047851562,
+          "stdev_ms": 0.41746143810777264,
+          "times_ms": [
+            715.717529296875,
+            716.2437744140625,
+            716.0896606445312,
+            716.4024047851562,
+            715.372314453125
+          ],
+          "relative_l2": 0.0
+        },
+        "int8_qk_fp8_pv": {
+          "mean_ms": 292.0908264160156,
+          "median_ms": 292.0744323730469,
+          "min_ms": 291.9303894042969,
+          "max_ms": 292.2624816894531,
+          "stdev_ms": 0.11908499286541975,
+          "times_ms": [
+            292.0744323730469,
+            292.2624816894531,
+            292.1182861328125,
+            292.06854248046875,
+            291.9303894042969
+          ],
+          "relative_l2": 0.01272070820142619
+        },
+        "fp8_qk_fp8_pv": {
+          "mean_ms": 358.8359069824219,
+          "median_ms": 358.8125,
+          "min_ms": 358.752197265625,
+          "max_ms": 358.9176940917969,
+          "stdev_ms": 0.07090074453987748,
+          "times_ms": [
+            358.752197265625,
+            358.7959289550781,
+            358.8125,
+            358.9176940917969,
+            358.9012145996094
+          ],
+          "relative_l2": 0.02967232908639883
+        },
+        "fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 401.56235961914064,
+          "median_ms": 401.5420227050781,
+          "min_ms": 401.42547607421875,
+          "max_ms": 401.79632568359375,
+          "stdev_ms": 0.14559034208835908,
+          "times_ms": [
+            401.42547607421875,
+            401.4609375,
+            401.79632568359375,
+            401.5420227050781,
+            401.5870361328125
+          ],
+          "relative_l2": 0.02909502125891307
+        },
+        "fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 359.1814208984375,
+          "median_ms": 359.1633605957031,
+          "min_ms": 359.1303405761719,
+          "max_ms": 359.241943359375,
+          "stdev_ms": 0.0463476538547623,
+          "times_ms": [
+            359.2170104980469,
+            359.1544494628906,
+            359.1633605957031,
+            359.1303405761719,
+            359.241943359375
+          ],
+          "relative_l2": 0.02954494303685537
+        },
+        "fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 405.0730407714844,
+          "median_ms": 405.04498291015625,
+          "min_ms": 405.03692626953125,
+          "max_ms": 405.12396240234375,
+          "stdev_ms": 0.04573984138472735,
+          "times_ms": [
+            405.04498291015625,
+            405.03692626953125,
+            405.12396240234375,
+            405.0372619628906,
+            405.1220703125
+          ],
+          "relative_l2": 0.028960287571671177
+        },
+        "sim_int8_qk_fp8_pv": {
+          "mean_ms": 21957.810546875,
+          "median_ms": 21957.810546875,
+          "min_ms": 21957.810546875,
+          "max_ms": 21957.810546875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21957.810546875
+          ],
+          "relative_l2": 0.0127254815135365,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "mean_ms": 21844.341796875,
+          "median_ms": 21844.341796875,
+          "min_ms": 21844.341796875,
+          "max_ms": 21844.341796875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21844.341796875
+          ],
+          "relative_l2": 0.029673423249918483,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 25406.900390625,
+          "median_ms": 25406.900390625,
+          "min_ms": 25406.900390625,
+          "max_ms": 25406.900390625,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25406.900390625
+          ],
+          "relative_l2": 0.029096536187882837,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 21996.330078125,
+          "median_ms": 21996.330078125,
+          "min_ms": 21996.330078125,
+          "max_ms": 21996.330078125,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21996.330078125
+          ],
+          "relative_l2": 0.029544192342401732,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 25834.51171875,
+          "median_ms": 25834.51171875,
+          "min_ms": 25834.51171875,
+          "max_ms": 25834.51171875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25834.51171875
+          ],
+          "relative_l2": 0.02895949242527511,
+          "measurement_kind": "single_full_simulation_run"
+        }
+      },
+      "wall_seconds": 18.95853042602539,
+      "kernel_wall_seconds": 18.49720811843872
+    },
+    {
+      "sample": "step_05_layer_47",
+      "step": 5,
+      "layer": 47,
+      "sigma": 0.9729729890823364,
+      "shape": [
+        1,
+        56,
+        73923,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "methods": {
+        "bf16_sdpa": {
+          "mean_ms": 714.3988403320312,
+          "median_ms": 714.4485473632812,
+          "min_ms": 714.0758666992188,
+          "max_ms": 714.6282348632812,
+          "stdev_ms": 0.2086428302358956,
+          "times_ms": [
+            714.0758666992188,
+            714.6282348632812,
+            714.3378295898438,
+            714.4485473632812,
+            714.5037231445312
+          ],
+          "relative_l2": 0.0
+        },
+        "int8_qk_fp8_pv": {
+          "mean_ms": 291.64182739257814,
+          "median_ms": 291.6544189453125,
+          "min_ms": 291.45013427734375,
+          "max_ms": 291.8540344238281,
+          "stdev_ms": 0.1597074226606923,
+          "times_ms": [
+            291.8540344238281,
+            291.6544189453125,
+            291.72412109375,
+            291.45013427734375,
+            291.52642822265625
+          ],
+          "relative_l2": 0.015966522852193514
+        },
+        "fp8_qk_fp8_pv": {
+          "mean_ms": 358.6240478515625,
+          "median_ms": 358.5921936035156,
+          "min_ms": 358.5624084472656,
+          "max_ms": 358.7503356933594,
+          "stdev_ms": 0.0793605684880511,
+          "times_ms": [
+            358.7503356933594,
+            358.5624084472656,
+            358.56353759765625,
+            358.6517639160156,
+            358.5921936035156
+          ],
+          "relative_l2": 0.03771699151790191
+        },
+        "fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 401.425634765625,
+          "median_ms": 401.3905029296875,
+          "min_ms": 401.2767028808594,
+          "max_ms": 401.6683349609375,
+          "stdev_ms": 0.15880332433459207,
+          "times_ms": [
+            401.3045654296875,
+            401.2767028808594,
+            401.3905029296875,
+            401.4880676269531,
+            401.6683349609375
+          ],
+          "relative_l2": 0.036587787569722925
+        },
+        "fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 359.0733642578125,
+          "median_ms": 359.0506286621094,
+          "min_ms": 358.9606018066406,
+          "max_ms": 359.2118835449219,
+          "stdev_ms": 0.10338075867144025,
+          "times_ms": [
+            359.1437072753906,
+            358.9606018066406,
+            359.0506286621094,
+            359.2118835449219,
+            359.0
+          ],
+          "relative_l2": 0.037572513475623674
+        },
+        "fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 404.8205810546875,
+          "median_ms": 404.8277587890625,
+          "min_ms": 404.738037109375,
+          "max_ms": 404.8959045410156,
+          "stdev_ms": 0.05652295995561959,
+          "times_ms": [
+            404.8959045410156,
+            404.738037109375,
+            404.8277587890625,
+            404.80963134765625,
+            404.8315734863281
+          ],
+          "relative_l2": 0.03642726916711268
+        },
+        "sim_int8_qk_fp8_pv": {
+          "mean_ms": 21674.79296875,
+          "median_ms": 21674.79296875,
+          "min_ms": 21674.79296875,
+          "max_ms": 21674.79296875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21674.79296875
+          ],
+          "relative_l2": 0.015971767667309525,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "mean_ms": 21621.640625,
+          "median_ms": 21621.640625,
+          "min_ms": 21621.640625,
+          "max_ms": 21621.640625,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21621.640625
+          ],
+          "relative_l2": 0.03771869988143455,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 25108.341796875,
+          "median_ms": 25108.341796875,
+          "min_ms": 25108.341796875,
+          "max_ms": 25108.341796875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25108.341796875
+          ],
+          "relative_l2": 0.03659052735983672,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 21556.275390625,
+          "median_ms": 21556.275390625,
+          "min_ms": 21556.275390625,
+          "max_ms": 21556.275390625,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21556.275390625
+          ],
+          "relative_l2": 0.037572539432500635,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 25000.880859375,
+          "median_ms": 25000.880859375,
+          "min_ms": 25000.880859375,
+          "max_ms": 25000.880859375,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25000.880859375
+          ],
+          "relative_l2": 0.03642741987352044,
+          "measurement_kind": "single_full_simulation_run"
+        }
+      },
+      "wall_seconds": 18.91723108291626,
+      "kernel_wall_seconds": 18.481231927871704
+    },
+    {
+      "sample": "step_19_layer_03",
+      "step": 19,
+      "layer": 3,
+      "sigma": 0.3870968222618103,
+      "shape": [
+        1,
+        56,
+        73923,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "methods": {
+        "bf16_sdpa": {
+          "mean_ms": 715.6040771484375,
+          "median_ms": 715.5706176757812,
+          "min_ms": 715.4509887695312,
+          "max_ms": 715.8369140625,
+          "stdev_ms": 0.14179938343025691,
+          "times_ms": [
+            715.4509887695312,
+            715.8369140625,
+            715.5637817382812,
+            715.5980834960938,
+            715.5706176757812
+          ],
+          "relative_l2": 0.0
+        },
+        "int8_qk_fp8_pv": {
+          "mean_ms": 290.64097900390624,
+          "median_ms": 290.677734375,
+          "min_ms": 290.30181884765625,
+          "max_ms": 290.8736267089844,
+          "stdev_ms": 0.20871146444410874,
+          "times_ms": [
+            290.677734375,
+            290.7013854980469,
+            290.30181884765625,
+            290.8736267089844,
+            290.65032958984375
+          ],
+          "relative_l2": 0.021527422030425923
+        },
+        "fp8_qk_fp8_pv": {
+          "mean_ms": 358.47662963867185,
+          "median_ms": 358.45965576171875,
+          "min_ms": 358.4441223144531,
+          "max_ms": 358.5611572265625,
+          "stdev_ms": 0.048195050836966784,
+          "times_ms": [
+            358.4687805175781,
+            358.45965576171875,
+            358.5611572265625,
+            358.4494323730469,
+            358.4441223144531
+          ],
+          "relative_l2": 0.038896323325121454
+        },
+        "fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 401.0021728515625,
+          "median_ms": 400.993408203125,
+          "min_ms": 400.9674072265625,
+          "max_ms": 401.0606994628906,
+          "stdev_ms": 0.03518389171483912,
+          "times_ms": [
+            400.993408203125,
+            401.0606994628906,
+            400.9674072265625,
+            401.002685546875,
+            400.9866638183594
+          ],
+          "relative_l2": 0.03886891427041049
+        },
+        "fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 358.8430419921875,
+          "median_ms": 358.8459167480469,
+          "min_ms": 358.7129211425781,
+          "max_ms": 358.9582824707031,
+          "stdev_ms": 0.10408894192199764,
+          "times_ms": [
+            358.7129211425781,
+            358.8459167480469,
+            358.7682800292969,
+            358.9582824707031,
+            358.9298095703125
+          ],
+          "relative_l2": 0.03784671214636502
+        },
+        "fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 404.637353515625,
+          "median_ms": 404.6671142578125,
+          "min_ms": 404.5612487792969,
+          "max_ms": 404.7042541503906,
+          "stdev_ms": 0.06268808406384696,
+          "times_ms": [
+            404.5612487792969,
+            404.6671142578125,
+            404.6737365722656,
+            404.7042541503906,
+            404.5804138183594
+          ],
+          "relative_l2": 0.03781756544245218
+        },
+        "sim_int8_qk_fp8_pv": {
+          "mean_ms": 21606.66015625,
+          "median_ms": 21606.66015625,
+          "min_ms": 21606.66015625,
+          "max_ms": 21606.66015625,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21606.66015625
+          ],
+          "relative_l2": 0.021529695208973167,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "mean_ms": 21584.615234375,
+          "median_ms": 21584.615234375,
+          "min_ms": 21584.615234375,
+          "max_ms": 21584.615234375,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21584.615234375
+          ],
+          "relative_l2": 0.03889963628467294,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 25068.67578125,
+          "median_ms": 25068.67578125,
+          "min_ms": 25068.67578125,
+          "max_ms": 25068.67578125,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25068.67578125
+          ],
+          "relative_l2": 0.038872439910735246,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 21640.935546875,
+          "median_ms": 21640.935546875,
+          "min_ms": 21640.935546875,
+          "max_ms": 21640.935546875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21640.935546875
+          ],
+          "relative_l2": 0.0378462608258857,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 24994.779296875,
+          "median_ms": 24994.779296875,
+          "min_ms": 24994.779296875,
+          "max_ms": 24994.779296875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            24994.779296875
+          ],
+          "relative_l2": 0.03781718218933083,
+          "measurement_kind": "single_full_simulation_run"
+        }
+      },
+      "wall_seconds": 18.902132511138916,
+      "kernel_wall_seconds": 18.470389127731323
+    },
+    {
+      "sample": "step_19_layer_25",
+      "step": 19,
+      "layer": 25,
+      "sigma": 0.3870968222618103,
+      "shape": [
+        1,
+        56,
+        73923,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "methods": {
+        "bf16_sdpa": {
+          "mean_ms": 717.8215576171875,
+          "median_ms": 717.79541015625,
+          "min_ms": 717.6731567382812,
+          "max_ms": 717.9771118164062,
+          "stdev_ms": 0.13493732626772603,
+          "times_ms": [
+            717.6731567382812,
+            717.9445190429688,
+            717.9771118164062,
+            717.79541015625,
+            717.7175903320312
+          ],
+          "relative_l2": 0.0
+        },
+        "int8_qk_fp8_pv": {
+          "mean_ms": 292.5011047363281,
+          "median_ms": 292.5370788574219,
+          "min_ms": 292.1728820800781,
+          "max_ms": 292.691162109375,
+          "stdev_ms": 0.1955836885775147,
+          "times_ms": [
+            292.5370788574219,
+            292.1728820800781,
+            292.58856201171875,
+            292.5158386230469,
+            292.691162109375
+          ],
+          "relative_l2": 0.013762790804084848
+        },
+        "fp8_qk_fp8_pv": {
+          "mean_ms": 358.9607666015625,
+          "median_ms": 358.96356201171875,
+          "min_ms": 358.9335021972656,
+          "max_ms": 358.9781799316406,
+          "stdev_ms": 0.01647216634042205,
+          "times_ms": [
+            358.9781799316406,
+            358.9335021972656,
+            358.9625549316406,
+            358.96356201171875,
+            358.9660339355469
+          ],
+          "relative_l2": 0.03041967748774686
+        },
+        "fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 401.8417724609375,
+          "median_ms": 401.82354736328125,
+          "min_ms": 401.66925048828125,
+          "max_ms": 402.0329895019531,
+          "stdev_ms": 0.12980804119604927,
+          "times_ms": [
+            401.66925048828125,
+            401.82354736328125,
+            401.86077880859375,
+            402.0329895019531,
+            401.8222961425781
+          ],
+          "relative_l2": 0.03002158943358038
+        },
+        "fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 359.47324829101564,
+          "median_ms": 359.4930419921875,
+          "min_ms": 359.4049377441406,
+          "max_ms": 359.5491943359375,
+          "stdev_ms": 0.0590492646333666,
+          "times_ms": [
+            359.4049377441406,
+            359.4224853515625,
+            359.5491943359375,
+            359.49658203125,
+            359.4930419921875
+          ],
+          "relative_l2": 0.030144790935341108
+        },
+        "fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 405.2572998046875,
+          "median_ms": 405.23248291015625,
+          "min_ms": 405.18743896484375,
+          "max_ms": 405.3887939453125,
+          "stdev_ms": 0.08059136668716022,
+          "times_ms": [
+            405.23248291015625,
+            405.27435302734375,
+            405.3887939453125,
+            405.18743896484375,
+            405.20343017578125
+          ],
+          "relative_l2": 0.029742823910174885
+        },
+        "sim_int8_qk_fp8_pv": {
+          "mean_ms": 21632.810546875,
+          "median_ms": 21632.810546875,
+          "min_ms": 21632.810546875,
+          "max_ms": 21632.810546875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21632.810546875
+          ],
+          "relative_l2": 0.013770421320400775,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "mean_ms": 21629.1953125,
+          "median_ms": 21629.1953125,
+          "min_ms": 21629.1953125,
+          "max_ms": 21629.1953125,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21629.1953125
+          ],
+          "relative_l2": 0.030423886723448666,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 24960.0234375,
+          "median_ms": 24960.0234375,
+          "min_ms": 24960.0234375,
+          "max_ms": 24960.0234375,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            24960.0234375
+          ],
+          "relative_l2": 0.030025816254837034,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 21555.8125,
+          "median_ms": 21555.8125,
+          "min_ms": 21555.8125,
+          "max_ms": 21555.8125,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21555.8125
+          ],
+          "relative_l2": 0.03014447042996193,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 25044.49609375,
+          "median_ms": 25044.49609375,
+          "min_ms": 25044.49609375,
+          "max_ms": 25044.49609375,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25044.49609375
+          ],
+          "relative_l2": 0.029742400823804506,
+          "measurement_kind": "single_full_simulation_run"
+        }
+      },
+      "wall_seconds": 18.958359003067017,
+      "kernel_wall_seconds": 18.51759123802185
+    },
+    {
+      "sample": "step_19_layer_47",
+      "step": 19,
+      "layer": 47,
+      "sigma": 0.3870968222618103,
+      "shape": [
+        1,
+        56,
+        73923,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "methods": {
+        "bf16_sdpa": {
+          "mean_ms": 714.8596801757812,
+          "median_ms": 714.8377075195312,
+          "min_ms": 714.6886596679688,
+          "max_ms": 715.1719970703125,
+          "stdev_ms": 0.19448723486581856,
+          "times_ms": [
+            715.1719970703125,
+            714.8919677734375,
+            714.8377075195312,
+            714.6886596679688,
+            714.7080688476562
+          ],
+          "relative_l2": 0.0
+        },
+        "int8_qk_fp8_pv": {
+          "mean_ms": 291.9617980957031,
+          "median_ms": 291.9791259765625,
+          "min_ms": 291.8329772949219,
+          "max_ms": 292.0219421386719,
+          "stdev_ms": 0.07418717603664961,
+          "times_ms": [
+            291.8329772949219,
+            291.9970703125,
+            292.0219421386719,
+            291.9791259765625,
+            291.9778747558594
+          ],
+          "relative_l2": 0.019311759654505673
+        },
+        "fp8_qk_fp8_pv": {
+          "mean_ms": 358.98106689453124,
+          "median_ms": 358.9537658691406,
+          "min_ms": 358.9263000488281,
+          "max_ms": 359.1246337890625,
+          "stdev_ms": 0.08260178163066963,
+          "times_ms": [
+            358.9274597167969,
+            358.9263000488281,
+            358.9537658691406,
+            359.1246337890625,
+            358.9731750488281
+          ],
+          "relative_l2": 0.03923413835775374
+        },
+        "fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 401.6167907714844,
+          "median_ms": 401.66033935546875,
+          "min_ms": 401.4901428222656,
+          "max_ms": 401.7253112792969,
+          "stdev_ms": 0.09827775358809585,
+          "times_ms": [
+            401.66033935546875,
+            401.6696472167969,
+            401.4901428222656,
+            401.7253112792969,
+            401.53851318359375
+          ],
+          "relative_l2": 0.03810957110414794
+        },
+        "fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 359.2500427246094,
+          "median_ms": 359.2878112792969,
+          "min_ms": 359.09326171875,
+          "max_ms": 359.3128967285156,
+          "stdev_ms": 0.08919661268566487,
+          "times_ms": [
+            359.2878112792969,
+            359.3128967285156,
+            359.2901611328125,
+            359.2660827636719,
+            359.09326171875
+          ],
+          "relative_l2": 0.03900079602757939
+        },
+        "fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 405.028662109375,
+          "median_ms": 404.990234375,
+          "min_ms": 404.9434509277344,
+          "max_ms": 405.1453857421875,
+          "stdev_ms": 0.08858451688764335,
+          "times_ms": [
+            405.1453857421875,
+            404.96502685546875,
+            404.9434509277344,
+            405.0992126464844,
+            404.990234375
+          ],
+          "relative_l2": 0.03786101672317349
+        },
+        "sim_int8_qk_fp8_pv": {
+          "mean_ms": 21756.85546875,
+          "median_ms": 21756.85546875,
+          "min_ms": 21756.85546875,
+          "max_ms": 21756.85546875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21756.85546875
+          ],
+          "relative_l2": 0.01931463275199524,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "mean_ms": 21579.279296875,
+          "median_ms": 21579.279296875,
+          "min_ms": 21579.279296875,
+          "max_ms": 21579.279296875,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21579.279296875
+          ],
+          "relative_l2": 0.039236531668545495,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 25000.2890625,
+          "median_ms": 25000.2890625,
+          "min_ms": 25000.2890625,
+          "max_ms": 25000.2890625,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            25000.2890625
+          ],
+          "relative_l2": 0.03811300431929977,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 21580.8359375,
+          "median_ms": 21580.8359375,
+          "min_ms": 21580.8359375,
+          "max_ms": 21580.8359375,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            21580.8359375
+          ],
+          "relative_l2": 0.03900042702746442,
+          "measurement_kind": "single_full_simulation_run"
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 24957.490234375,
+          "median_ms": 24957.490234375,
+          "min_ms": 24957.490234375,
+          "max_ms": 24957.490234375,
+          "stdev_ms": 0.0,
+          "times_ms": [
+            24957.490234375
+          ],
+          "relative_l2": 0.03786073191060466,
+          "measurement_kind": "single_full_simulation_run"
+        }
+      },
+      "wall_seconds": 18.34398078918457,
+      "kernel_wall_seconds": 18.494436264038086
+    }
+  ],
+  "simulation": {
+    "implementation": "/workspace/SageAttention_Sim/sageattention/h3_fp8_smoothq_sim",
+    "description": "faithful tiled pure-PyTorch SageAttention simulation",
+    "cta_k": 64,
+    "block_q": 2048,
+    "warmup": 0,
+    "repeats": 1,
+    "timing": "CUDA Events; one full end-to-end simulation run"
+  },
+  "simulation_kernel_cross_validation": {
+    "metric": "||simulation.float-kernel.float||_2 / ||kernel.float||_2",
+    "reference": "matching compiled CUDA kernel output",
+    "samples": {
+      "step_05_layer_03": {
+        "sim_int8_qk_fp8_pv": {
+          "simulation_method": "sim_int8_qk_fp8_pv",
+          "kernel_method": "int8_qk_fp8_pv",
+          "relative_l2": 0.002671197923724952
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv",
+          "kernel_method": "fp8_qk_fp8_pv",
+          "relative_l2": 0.002661433317440513
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_q",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_q",
+          "relative_l2": 0.002663343092115477
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_v",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_v",
+          "relative_l2": 0.001522744776618415
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_qv",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_qv",
+          "relative_l2": 0.001524968438059883
+        }
+      },
+      "step_05_layer_25": {
+        "sim_int8_qk_fp8_pv": {
+          "simulation_method": "sim_int8_qk_fp8_pv",
+          "kernel_method": "int8_qk_fp8_pv",
+          "relative_l2": 0.0012874697553522181
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv",
+          "kernel_method": "fp8_qk_fp8_pv",
+          "relative_l2": 0.0012899353907660444
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_q",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_q",
+          "relative_l2": 0.0012901822171773817
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_v",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_v",
+          "relative_l2": 0.0008287970176617835
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_qv",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_qv",
+          "relative_l2": 0.0008291566748552505
+        }
+      },
+      "step_05_layer_47": {
+        "sim_int8_qk_fp8_pv": {
+          "simulation_method": "sim_int8_qk_fp8_pv",
+          "kernel_method": "int8_qk_fp8_pv",
+          "relative_l2": 0.0015324303435127432
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv",
+          "kernel_method": "fp8_qk_fp8_pv",
+          "relative_l2": 0.001531362764112775
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_q",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_q",
+          "relative_l2": 0.0015315436029002252
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_v",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_v",
+          "relative_l2": 0.0010309911423087273
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_qv",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_qv",
+          "relative_l2": 0.0010303339225863429
+        }
+      },
+      "step_19_layer_03": {
+        "sim_int8_qk_fp8_pv": {
+          "simulation_method": "sim_int8_qk_fp8_pv",
+          "kernel_method": "int8_qk_fp8_pv",
+          "relative_l2": 0.0022266450297642017
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv",
+          "kernel_method": "fp8_qk_fp8_pv",
+          "relative_l2": 0.0022221485768466023
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_q",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_q",
+          "relative_l2": 0.002222040270904678
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_v",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_v",
+          "relative_l2": 0.0016524916399044349
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_qv",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_qv",
+          "relative_l2": 0.0016528896872677681
+        }
+      },
+      "step_19_layer_25": {
+        "sim_int8_qk_fp8_pv": {
+          "simulation_method": "sim_int8_qk_fp8_pv",
+          "kernel_method": "int8_qk_fp8_pv",
+          "relative_l2": 0.0013239124367158408
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv",
+          "kernel_method": "fp8_qk_fp8_pv",
+          "relative_l2": 0.001324636108339518
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_q",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_q",
+          "relative_l2": 0.001325484308309327
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_v",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_v",
+          "relative_l2": 0.0010068690455637393
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_qv",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_qv",
+          "relative_l2": 0.001007858692689739
+        }
+      },
+      "step_19_layer_47": {
+        "sim_int8_qk_fp8_pv": {
+          "simulation_method": "sim_int8_qk_fp8_pv",
+          "kernel_method": "int8_qk_fp8_pv",
+          "relative_l2": 0.0018716584225844117
+        },
+        "sim_fp8_qk_fp8_pv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv",
+          "kernel_method": "fp8_qk_fp8_pv",
+          "relative_l2": 0.0018670362814301835
+        },
+        "sim_fp8_qk_fp8_pv_smooth_q": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_q",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_q",
+          "relative_l2": 0.0018661885041285147
+        },
+        "sim_fp8_qk_fp8_pv_smooth_v": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_v",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_v",
+          "relative_l2": 0.0011813111815995275
+        },
+        "sim_fp8_qk_fp8_pv_smooth_qv": {
+          "simulation_method": "sim_fp8_qk_fp8_pv_smooth_qv",
+          "kernel_method": "fp8_qk_fp8_pv_smooth_qv",
+          "relative_l2": 0.001180362761983324
+        }
+      }
+    }
+  },
+  "kernel_configuration": {
+    "qk_quant_gran": "per_thread",
+    "int8_pv_accum_dtype": "fp32",
+    "fp8_pv_accum_dtype": "fp32",
+    "fp8_qk_grouping": "Q: 8 strided groups per 32 rows; K: 4 strided groups per 64 rows",
+    "smoothing_precision": "BF16/FP16 before Triton FP32 scale reduction",
+    "fp8_scale_epsilon": 1e-07
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-27T21:52:10.800522+00:00",
+  "benchmark_scope": "end-to-end GPU kernels; excludes disk I/O and CPU-to-GPU load",
+  "timing": "CUDA Events; warmup excluded; arithmetic mean over repeats",
+  "reference": "torch.nn.functional.scaled_dot_product_attention BF16 output",
+  "relative_l2": "||candidate.float-reference.float||_2 / ||reference.float||_2",
+  "warmup": 1,
+  "repeats": 2,
+  "seq_limit": 1024,
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "compute_capability": [
+      12,
+      0
+    ],
+    "torch": "2.10.0+cu130",
+    "torch_cuda": "13.0",
+    "python": "3.12.13",
+    "sageattention_repo": "/workspace/SageAttention",
+    "sageattention_commit": "d1a57a546c3d395b1ffcbeecc66d81db76f3b4b5",
+    "sageattention_branch": "feature/qk-fp8-pv-fp8"
+  },
+  "samples": [
+    {
+      "sample": "step_05_layer_03",
+      "step": 5,
+      "layer": 3,
+      "sigma": 0.9729729890823364,
+      "shape": [
+        1,
+        56,
+        1024,
+        128
+      ],
+      "dtype": "torch.bfloat16",
+      "methods": {
+        "bf16_sdpa": {
+          "mean_ms": 0.2953120023012161,
+          "median_ms": 0.2953120023012161,
+          "min_ms": 0.2313919961452484,
+          "max_ms": 0.35923200845718384,
+          "stdev_ms": 0.09039653961274126,
+          "times_ms": [
+            0.2313919961452484,
+            0.35923200845718384
+          ],
+          "relative_l2": 0.0
+        },
+        "int8_qk_fp8_pv": {
+          "mean_ms": 0.5156319886445999,
+          "median_ms": 0.5156319886445999,
+          "min_ms": 0.4864319860935211,
+          "max_ms": 0.5448319911956787,
+          "stdev_ms": 0.041295039629064605,
+          "times_ms": [
+            0.4864319860935211,
+            0.5448319911956787
+          ],
+          "relative_l2": 0.01863958703697718
+        },
+        "fp8_qk_fp8_pv": {
+          "mean_ms": 0.756767988204956,
+          "median_ms": 0.756767988204956,
+          "min_ms": 0.7235199809074402,
+          "max_ms": 0.7900159955024719,
+          "stdev_ms": 0.047019782842026576,
+          "times_ms": [
+            0.7235199809074402,
+            0.7900159955024719
+          ],
+          "relative_l2": 0.03214942536374647
+        },
+        "fp8_qk_fp8_pv_smooth_q": {
+          "mean_ms": 0.9645919799804688,
+          "median_ms": 0.9645919799804688,
+          "min_ms": 0.8878719806671143,
+          "max_ms": 1.0413119792938232,
+          "stdev_ms": 0.10849846353420046,
+          "times_ms": [
+            0.8878719806671143,
+            1.0413119792938232
+          ],
+          "relative_l2": 0.03210433840939344
+        },
+        "fp8_qk_fp8_pv_smooth_v": {
+          "mean_ms": 0.6561760008335114,
+          "median_ms": 0.6561760008335114,
+          "min_ms": 0.5909439921379089,
+          "max_ms": 0.7214080095291138,
+          "stdev_ms": 0.09225199139816061,
+          "times_ms": [
+            0.5909439921379089,
+            0.7214080095291138
+          ],
+          "relative_l2": 0.031061364765962978
+        },
+        "fp8_qk_fp8_pv_smooth_qv": {
+          "mean_ms": 0.8435199856758118,
+          "median_ms": 0.8435199856758118,
+          "min_ms": 0.7746559977531433,
+          "max_ms": 0.9123839735984802,
+          "stdev_ms": 0.09738838567933475,
+          "times_ms": [
+            0.7746559977531433,
+            0.9123839735984802
+          ],
+          "relative_l2": 0.030998048163168732
+        }
+      },
+      "wall_seconds": 4.873516082763672
+    }
+  ]
+}

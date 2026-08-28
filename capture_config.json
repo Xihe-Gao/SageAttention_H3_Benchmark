@@ -1,0 +1,5 @@
+{
+  "output_dir": "/workspace/qkv_minimax_h3/captures",
+  "steps": [5, 19],
+  "layers": [3, 25, 47]
+}
