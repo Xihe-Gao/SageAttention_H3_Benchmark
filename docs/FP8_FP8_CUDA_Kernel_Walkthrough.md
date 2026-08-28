@@ -15,7 +15,7 @@
 | QK accumulator | INT32 score fragment | FP32 score fragment |
 | V 量化 | per-channel E4M3 | 相同 |
 | PV MMA | E4M3×E4M3 | 相同 |
-| PV accumulator | FP32 配置 | FP32 long-term + FP32 short-term（`fp32+fp32`） |
+| PV accumulator | FP32 配置（含可选两级路径） | 当前 wrapper 直接 FP32 累加，不启用 short-term buffer |
 | CUDA launcher | `DataType::kInt8` | `DataType::kE4M3` |
 
 除 Q/K 的量化和 QK MMA 外，两条路径共享 online softmax、probability FP8 转换、PV 计算和输出归一化逻辑。
