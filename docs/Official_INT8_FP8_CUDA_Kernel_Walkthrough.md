@@ -17,10 +17,10 @@ The implementation contains many compile-time branches. Start with one fixed con
 | Layout | NHD |
 | Head dimension | 128 |
 | Attention | Non-causal |
-| QK quantization | Per-warp |
+| QK quantization | Per-thread |
 | QK computation | INT8 × INT8 → INT32 |
 | PV computation | E4M3 × E4M3 |
-| PV accumulation | FP32 long-term + FP16 short-term |
+| PV accumulation | FP32 long-term + FP32 short-term |
 | Output | BF16 |
 | Return LSE | False |
 
@@ -33,8 +33,8 @@ sageattn_qk_int8_pv_fp8_cuda(
     v,
     tensor_layout="NHD",
     is_causal=False,
-    qk_quant_gran="per_warp",
-    pv_accum_dtype="fp32+fp16",
+    qk_quant_gran="per_thread",
+    pv_accum_dtype="fp32+fp32",
 )
 ```
 
@@ -45,7 +45,7 @@ Ignore other template branches during the first reading pass.
 The full computation can be summarized as:
 
 ```text
-BF16 Q ── per-warp quantization ──> INT8 Q + FP32 q_scale
+BF16 Q ── per-thread quantization ──> INT8 Q + FP32 q_scale
 BF16 K ── smoothing/quantization ─> INT8 K + FP32 k_scale
 BF16 V ── transpose/quantization ─> E4M3 V + FP32 v_scale
 
@@ -86,8 +86,8 @@ Read the files in this order:
 | ---: | --- | --- |
 | 1 | `sageattention/core.py` | `sageattn` |
 | 2 | `sageattention/core.py` | `sageattn_qk_int8_pv_fp8_cuda` |
-| 3 | `sageattention/quant.py` | `per_warp_int8` |
-| 4 | `sageattention/quant.py` | `per_channel_fp8` |
+| 3 | `sageattention/triton/quant_per_thread.py` | `per_thread_int8` |
+| 4 | `sageattention/triton/quant_per_thread.py` | `per_channel_fp8` |
 | 5 | `csrc/fused/fused.cu` | `QuantInt8Kernel` |
 | 6 | `csrc/fused/fused.cu` | `TransposePadPermuteKernel` |
 | 7 | `csrc/fused/fused.cu` | `MeanScaleKernel` |
@@ -114,8 +114,8 @@ It reads the CUDA compute capability and selects an implementation. For SM120 it
 ```python
 sageattn_qk_int8_pv_fp8_cuda(
     ...,
-    qk_quant_gran="per_warp",
-    pv_accum_dtype="fp32+fp16",
+    qk_quant_gran="per_thread",
+    pv_accum_dtype="fp32+fp32",
 )
 ```
 
@@ -155,7 +155,7 @@ The first term is computed by the quantized kernel. The second term is relevant 
 
 ## 5. INT8 Q/K quantization
 
-The Python entry is `per_warp_int8` in `sageattention/quant.py`.
+The Python entry is `per_thread_int8` in `sageattention/triton/quant_per_thread.py`.
 
 For the fixed configuration:
 
@@ -198,11 +198,11 @@ While reading `QuantInt8Kernel`, identify:
 - optional fused subtraction of K mean;
 - NHD versus HND stride calculation.
 
-Then read the launcher `quant_per_warp_int8_cuda` near the lower half of the same file.
+Then read the launcher `quant_per_thread_int8_cuda` near the lower half of the same file.
 
 ## 6. FP8 V preprocessing
 
-The Python entry is `per_channel_fp8` in `sageattention/quant.py`.
+The Python entry is `per_channel_fp8` in `sageattention/triton/quant_per_thread.py`.
 
 V is not consumed in its original attention layout. It is transposed so the PV MMA reads contiguous values along the sequence dimension.
 
@@ -516,7 +516,7 @@ The two-level accumulation strategy is:
 ```text
 E4M3 P × E4M3 V
         │
-        └─> FP16 short-term instruction buffer
+        └─> FP32 short-term instruction buffer
                   │ periodically converted/added
                   └─> FP32 long-term RO
 ```
@@ -524,7 +524,7 @@ E4M3 P × E4M3 V
 This is the meaning of:
 
 ```text
-pv_accum_dtype="fp32+fp16"
+pv_accum_dtype="fp32+fp32"
 ```
 
 Compare it with:
@@ -533,7 +533,7 @@ Compare it with:
 | --- | --- |
 | `fp32` | direct FP32 accumulation |
 | `fp32+fp32` | FP32 instruction buffer + FP32 long-term buffer |
-| `fp32+fp16` | FP16 instruction buffer + FP32 long-term buffer |
+| `fp32+fp32` | FP32 instruction buffer + FP32 long-term buffer |
 
 ## 15. Epilogue
 
@@ -599,7 +599,7 @@ Goal: understand the sequence of QK, softmax, and PV stages.
 
 Read:
 
-1. `per_warp_int8`
+1. `per_thread_int8`
 2. `QuantInt8Kernel`
 3. `per_channel_fp8`
 4. V transpose and E4M3 quantization
@@ -638,7 +638,7 @@ From the repository root:
 
 ```bash
 rg -n "def sageattn_qk_int8_pv_fp8_cuda" sageattention/core.py
-rg -n "def per_warp_int8|def per_channel_fp8" sageattention/quant.py
+rg -n "def per_thread_int8|def per_channel_fp8" sageattention/quant.py
 rg -n "QuantInt8Kernel|TransposePadPermuteKernel|MeanScaleKernel" csrc/fused/fused.cu
 rg -n "qk_int_sv_f8_attn_kernel" csrc/qattn
 rg -n "compute_int_qk|update_mdo|RS_32_to_8|compute_fp8_sv|normalize_d" csrc/qattn/attn_utils.cuh
