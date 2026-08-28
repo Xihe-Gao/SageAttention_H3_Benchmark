@@ -16,7 +16,7 @@ import torch
 ROOT = Path("/workspace/qkv_minimax_h3")
 CAPTURE_ROOT = ROOT / "captures"
 DEFAULT_RESULTS = ROOT / "sageattention_benchmark_results.json"
-SIM_ROOT = Path("/workspace/SageAttention_Sim/sageattention/h3_fp8_smoothq_sim")
+SIM_ROOT = Path(__file__).resolve().parent / "third_party/SageAttention_Simulation/h3_fp8_smoothq_sim"
 sys.path.insert(0, str(SIM_ROOT))
 
 from sim import sim_attention  # noqa: E402

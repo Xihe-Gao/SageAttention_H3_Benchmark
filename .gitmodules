@@ -1,0 +1,7 @@
+[submodule "third_party/SageAttention"]
+	path = third_party/SageAttention
+	url = https://github.com/Xihe-Gao/SageAttention.git
+	branch = feature/qk-fp8-pv-fp8
+[submodule "third_party/SageAttention_Simulation"]
+	path = third_party/SageAttention_Simulation
+	url = https://github.com/Xihe-Gao/SageAttention_Simulation.git

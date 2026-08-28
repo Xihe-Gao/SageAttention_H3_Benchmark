@@ -25,10 +25,31 @@ two outputs can be cross-validated.
 - `cross_validate_sim_kernel.py` — direct simulation-vs-kernel comparison
 - `generate_benchmark_report.py` — report generator
 - `capture_config.json`, `workflow_api.json`, `prompt.txt` — capture metadata
+- `third_party/SageAttention` — SageAttention CUDA/Triton implementation (pinned to `feature/qk-fp8-pv-fp8`)
+- `third_party/SageAttention_Simulation` — independent PyTorch simulation implementation
 - `sageattention_benchmark_results.json` — measured results
 
 The large `captures/` directory contains the raw Q/K/V tensors and is excluded
 from Git by design. Store it separately when reproducing the benchmark.
+
+## Dependencies
+
+This repository pins the tested implementation and simulation as Git submodules.
+Clone with submodules enabled:
+
+```bash
+git clone --recurse-submodules https://github.com/Xihe-Gao/SageAttention_H3_Benchmark.git
+```
+
+For an existing checkout, initialize them with:
+
+```bash
+git submodule update --init --recursive
+```
+
+The submodules are pinned to specific commits for reproducibility. To deliberately
+refresh them to their configured remote branches, run `git submodule update --remote`
+and commit the resulting submodule pointer changes.
 
 ## Step-by-step reproduction
 
@@ -67,14 +88,14 @@ large. The workflow and prompt used for the reference capture are retained as
 ### 2. Run the FP8 algorithm simulation
 
 The simulation is a pure-PyTorch implementation in
-`SageAttention_Sim/sageattention/h3_fp8_smoothq_sim`. It independently performs
+`third_party/SageAttention_Simulation/h3_fp8_smoothq_sim`. It independently performs
 per-thread Q/K quantization, per-channel V quantization, tiled online softmax,
 FP8 probability conversion, and FP32 PV accumulation.
 
 From this project directory:
 
 ```bash
-PYTHONPATH=/path/to/SageAttention \
+PYTHONPATH=/path/to/SageAttention_H3_Benchmark/third_party/SageAttention \
   python benchmark_sageattention_sim.py
 ```
 
@@ -89,10 +110,10 @@ for the current GPU. The tested operator configuration is per-thread Q/K
 quantization with FP32 PV accumulation:
 
 ```bash
-cd /path/to/SageAttention
+cd /path/to/SageAttention_H3_Benchmark/third_party/SageAttention
 python setup.py build_ext --inplace
 cd /path/to/SageAttention_H3_Benchmark
-PYTHONPATH=/path/to/SageAttention \
+PYTHONPATH=/path/to/SageAttention_H3_Benchmark/third_party/SageAttention \
   python benchmark_sageattention.py
 ```
 
@@ -106,7 +127,7 @@ The resulting per-sample timing and relative L2 values are written to
 Run the direct cross-validation after both sets of results are available:
 
 ```bash
-PYTHONPATH=/path/to/SageAttention \
+PYTHONPATH=/path/to/SageAttention_H3_Benchmark/third_party/SageAttention \
   python cross_validate_sim_kernel.py
 ```
 
