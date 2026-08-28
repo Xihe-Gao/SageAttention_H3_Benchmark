@@ -4,23 +4,36 @@
 
 源码来自本仓库的 `third_party/SageAttention` submodule；相对路径均相对于该目录。
 
-## 1. 与官方 INT8+FP8 路径的差异
+## 1. Scope and fixed configuration
 
-| 部分 | 官方 INT8+FP8 | 本参考 FP8+FP8 |
-|---|---|---|
-| Python Q/K 量化 | `per_warp_int8` | `per_thread_fp8`，输出 E4M3 |
-| Q/K dtype | INT8 | FP8 E4M3 |
-| QK MMA | INT8×INT8→INT32 (`IMMA`) | FP8×FP8→FP32 (`f8f8f32` MMA) |
-| QK scale | `/127`，INT8 scale | `/448 + 1e-7`，FP8 scale |
-| QK accumulator | INT32 score fragment | FP32 score fragment |
-| V 量化 | per-channel E4M3 | 相同 |
-| PV MMA | E4M3×E4M3 | 相同 |
-| PV accumulator | FP32 配置（含可选两级路径） | 当前 wrapper 直接 FP32 累加，不启用 short-term buffer |
-| CUDA launcher | `DataType::kInt8` | `DataType::kE4M3` |
+本参考实现的固定阅读配置如下：
 
-除 Q/K 的量化和 QK MMA 外，两条路径共享 online softmax、probability FP8 转换、PV 计算和输出归一化逻辑。
+| Option | Value |
+|---|---|
+| Q/K quantization | `per_thread` E4M3 |
+| QK computation | FP8 E4M3 × FP8 E4M3 → FP32 |
+| V quantization | per-channel E4M3 |
+| PV computation | E4M3 × E4M3 → FP32 |
+| `smooth_k` | enabled by default |
+| `smooth_q` / `smooth_v` | optional fused paths |
+| Output | BF16/FP16 |
 
-## 2. Python API 调用链
+先按本文主体阅读 FP8 路径，再在文档末尾查看与官方 INT8+FP8 实现的逐项差异。
+
+## 2. End-to-end computation
+
+```text
+BF16 Q/K ── per-thread FP8 quantization ──> E4M3 Q/K + FP32 scales
+BF16 V   ── per-channel FP8 quantization ─> E4M3 V + FP32 scale
+
+E4M3 Q × E4M3 K → FP32 score
+                  ↓ online softmax
+FP8 probability × E4M3 V → FP32 output accumulator
+                  ↓ normalize
+BF16/FP16 output
+```
+
+## 3. Python API 调用链
 
 入口位于 `sageattention/core.py`：
 
@@ -35,16 +48,11 @@ sageattn_qk_fp8_pv_fp8_cuda(
 )
 ```
 
-与官方函数 `sageattn_qk_int8_pv_fp8_cuda` 的主要差异：
-
-1. Q/K 调用 `triton.quant_per_warp_fp8.per_thread_fp8`，而不是 `quant.per_warp_int8`。
-2. 使用 `qk_quant_gran="per_thread"` 和当前源码支持的 `pv_accum_dtype="fp32"`。
-3. Q、K 输出为 `torch.float8_e4m3fn`，scale 为 FP32。
-4. 根据 `smooth_q`、`smooth_v` 选择基础或 mean-fused custom op。
+Q、K 输出为 `torch.float8_e4m3fn`，scale 为 FP32；根据 `smooth_q`、`smooth_v` 选择基础或 mean-fused custom op。
 
 V 仍调用官方的 `per_channel_fp8`，因此 V 路径与 INT8+FP8 保持一致。
 
-## 3. FP8 Q/K 量化
+## 4. FP8 Q/K 量化
 
 实现位于 `sageattention/triton/quant_per_warp_fp8.py` 的 `per_thread_fp8`。
 
@@ -65,7 +73,7 @@ Q: torch.float8_e4m3fn + q_scale(float32)
 K: torch.float8_e4m3fn + k_scale(float32)
 ```
 
-## 4. Python custom-op wrapper
+## 5. Python custom-op wrapper
 
 ` sageattention/sm89_compile.py` 将 C++ 扩展注册为 PyTorch custom op。FP8 路径对应的入口包括：
 
@@ -76,7 +84,7 @@ qk_fp8_sv_f8_accum_f32_fuse_v_scale_fuse_v_mean_attn
 
 与官方 INT8 路径相比，wrapper 接收的 Q/K tensor dtype 不同，但 V、scale、layout、causal 和 LSE 参数组织方式基本相同。
 
-## 5. C++ binding 与 CUDA launcher
+## 6. C++ binding 与 CUDA launcher
 
 PyTorch 扩展绑定位于：
 
@@ -105,7 +113,7 @@ qk_int_sv_f8_attn_kernel<..., DataType::kE4M3, ...>
 
 `DataType::kE4M3` 会让 kernel 使用 FP8 QK 的代码分支；PV 仍然走同一个 FP8 V 计算流程。
 
-## 6. CUDA kernel 主流程
+## 7. CUDA kernel 主流程
 
 核心模板位于：
 
@@ -135,7 +143,7 @@ FP8 probability × FP8 V → FP32 PV accumulator
 
 这里函数名仍叫 `compute_int_qk`，是历史命名；当 `DTypeQK == kE4M3` 时实际执行的是 FP8 分支，而不是整数点积。
 
-## 7. QK MMA 与 PV MMA
+## 8. QK MMA 与 PV MMA
 
 `csrc/qattn/attn_utils.cuh` 中的 FP8 分支调用：
 
@@ -143,14 +151,7 @@ FP8 probability × FP8 V → FP32 PV accumulator
 mma::mma_sync_m16n16k32_row_col_f8f8f32(...)
 ```
 
-底层 wrapper 位于 `csrc/mma.cuh`，使用 FP8 输入、FP32 输出/累加的 MMA 形式。与官方 INT8+FP8 路径相比，差异只发生在 QK：
-
-```text
-官方：INT8 Q × INT8 K → INT32
-参考：FP8  Q × FP8  K → FP32
-```
-
-两条路径的 PV 都是：
+底层 wrapper 位于 `csrc/mma.cuh`，使用 FP8 输入、FP32 输出/累加的 MMA 形式。两条路径的 PV 都是：
 
 ```text
 FP8 probability × FP8 V → FP32 accumulator
@@ -158,7 +159,7 @@ FP8 probability × FP8 V → FP32 accumulator
 
 源码中的 `RO` 为 `DTypeSVAccum=float`。需要特别注意：FP8 wrapper 虽然复用了官方 INT8+FP8 的通用 `qk_int_sv_f8_attn_kernel` template，但在 launcher 中传入 `use_inst_buffer=false`，因此实际调用的是 `compute_fp8_sv()`，直接将 FP8 PV MMA 结果累加到 `RO`；它不会调用 `compute_fp8_sv_inst_buf()`，也没有 FP32 short-term instruction buffer。`fp32+fp32` 是官方 INT8+FP8 的两级累加配置名，不能据此推断当前 FP8+FP8 wrapper 自动启用了同样的临时缓冲路径。
 
-## 8. Smooth 选项
+## 9. Smooth 选项
 
 - `smooth_k`：Q/K 量化前减去 K 的序列均值；对 softmax row 只产生常数平移。
 - `smooth_q`：Q 量化前减去 Q 均值，并通过 `q_mean_k_bias` 加回校正项。
@@ -167,7 +168,7 @@ FP8 probability × FP8 V → FP32 accumulator
 
 这些选项只改变预处理、校正和融合入口，不改变 FP8 QK/PV 的基本 MMA 数据类型。
 
-## 9. 如何与官方路径对照阅读
+## 10. 验证与源码导航
 
 建议先阅读 `Official_INT8_FP8_CUDA_Kernel_Walkthrough.md`，再按以下差异定位源码：
 
@@ -178,3 +179,19 @@ FP8 probability × FP8 V → FP32 accumulator
 5. `mma.cuh`：确认 QK/PV 的 FP8 MMA wrapper 与累加类型。
 
 该 FP8+FP8 路径是用于 SageAttention H3 的实验性参考实现；性能和数值结果应通过独立的 PyTorch simulation 及 BF16 reference 进行验证。
+
+## 11. 与 Official_INT8_FP8_CUDA_Kernel_Walkthrough 的差异
+
+| 部分 | 官方 INT8+FP8 | 本参考 FP8+FP8 |
+|---|---|---|
+| Python Q/K 量化 | `per_warp_int8` 或官方 per-thread INT8 | `per_thread_fp8`，输出 E4M3 |
+| Q/K dtype | INT8 | FP8 E4M3 |
+| QK MMA | INT8×INT8→INT32 (`IMMA`) | FP8×FP8→FP32 (`f8f8f32` MMA) |
+| QK scale | `/127`，INT8 scale | `/448 + 1e-7`，FP8 scale |
+| QK score fragment | INT32 | FP32 |
+| V 量化 | per-channel E4M3 | 相同 |
+| PV MMA | E4M3×E4M3 | 相同 |
+| PV 累加 | 可选 direct 或 `fp32+fp32` 两级 buffer | 当前 FP8 wrapper 传入 `use_inst_buffer=false`，direct FP32 累加 |
+| CUDA dispatch | `DataType::kInt8` | `DataType::kE4M3` |
+
+两条路径共享 online softmax、probability FP8 转换、V scale 和输出归一化；本参考实现仅替换 Q/K 量化与 QK MMA，并额外提供 smooth_q/smooth_v 实验分支。
