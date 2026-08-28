@@ -54,6 +54,8 @@ CUDA 算子实现在独立的 `/workspace/SageAttention` feature branch 中。�
 4. CUDA attention kernel 使用 E4M3 QK MMA 和 FP32 score accumulator，逐 `CTA_K=64` tile 更新 online softmax；probability 转换为 E4M3 后执行 E4M3 PV MMA，并以 FP32 累加输出。
 5. 根据开关分派到基础、fuse_q_mean、fuse_v_mean 或同时融合两者的四个入口，最后写出 BF16/FP16 output。
 
+FP8 QK 使用 FP8 输入和 FP32 累加的证据链是完整且可独立复核的：Python 层将 Q/K 生成为 `torch.float8_e4m3fn`，C++ dispatch 通过 `DataType::kE4M3` 选择 FP8 kernel；在 `compute_int_qk` 中，该类型调用 `mma_sync_m16n16k32_row_col_f8f8f32`，其内联 PTX 为 `mma.sync.aligned.m16n8k32.row.col.f32.e4m3.e4m3.f32`。对编译后的 `sm89` 共享库按函数符号过滤 `DataType3`（即 `kE4M3`）后，SASS 中可看到 `QMMA.16832.F32.E4M3.E4M3`：两个 `E4M3` 表示 Q、K 输入为 FP8，`F32` 表示 MMA 输出/累加为 FP32；同一 FP8-only kernel 的 PV 路径也使用 `QMMA...F32.E4M3.E4M3`。
+
 INT8 对照路径使用 `sageattn_qk_int8_pv_fp8_cuda`：Q/K 为 INT8，QK 使用整数点积；P/V 仍为 E4M3。本次配置为 `qk_quant_gran=per_thread`、`pv_accum_dtype=fp32`，因此 PV 使用 FP32 accumulator。FP8-only 路径同样使用 per-thread Q/K scale 和 FP32 PV accumulator。
 
 这种独立实现方式是有意的：如果仿真和算子共享量化结果或核心计算代码，二者可能同时继承同一个错误而仍然得到一致结果；独立实现再比较输出，更适合发现分组、scale、平滑校正、padding、累加精度和舍入顺序方面的问题。
@@ -91,6 +93,8 @@ INT8 对照路径使用 `sageattn_qk_int8_pv_fp8_cuda`：Q/K 为 INT8，QK 使�
 | fp8_qk_fp8_pv + smooth_q（仿真） | 25153.182 | 0.038540 | 0.029097 | 0.058542 |
 | fp8_qk_fp8_pv + smooth_v（仿真） | 21709.569 | 0.038699 | 0.029544 | 0.058089 |
 | fp8_qk_fp8_pv + smooth_qv（仿真） | 25208.749 | 0.038144 | 0.028959 | 0.058058 |
+
+表 1 中 FP8-only CUDA kernel 的耗时高于 INT8 QK + FP8 PV，主要原因是两者的 QK 硬件路径不同：INT8 路径使用 `IMMA` 执行 INT8×INT8→INT32，整数 Tensor Core 吞吐较高，scale 可在后续阶段处理；FP8-only 路径使用 `QMMA ... F32.E4M3.E4M3` 执行 FP8×FP8→FP32，需要承担 FP32 score 累加、scale 处理以及额外的寄存器和数据搬运开销。两种路径的 PV 都是 FP8 输入、FP32 累加，因此主要性能差异来自 QK；`smooth_q` 和 `smooth_qv` 还增加了均值校正计算，所以耗时进一步上升。
 
 表 2 直接比较每个仿真输出和与其配置对应的 CUDA 算子输出。分母是 CUDA 算子输出的 L2 norm；该表不使用 BF16 作为中间参照。
 
