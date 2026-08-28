@@ -15,7 +15,7 @@
 | QK accumulator | INT32 score fragment | FP32 score fragment |
 | V 量化 | per-channel E4M3 | 相同 |
 | PV MMA | E4M3×E4M3 | 相同 |
-| PV accumulator | FP32 配置 | FP32（当前实现只接受 `pv_accum_dtype="fp32"`） |
+| PV accumulator | FP32 配置 | FP32 long-term + FP32 short-term（`fp32+fp32`） |
 | CUDA launcher | `DataType::kInt8` | `DataType::kE4M3` |
 
 除 Q/K 的量化和 QK MMA 外，两条路径共享 online softmax、probability FP8 转换、PV 计算和输出归一化逻辑。
@@ -30,7 +30,7 @@ sageattn_qk_fp8_pv_fp8_cuda(
     tensor_layout="HND",
     is_causal=False,
     qk_quant_gran="per_thread",
-    pv_accum_dtype="fp32",
+    pv_accum_dtype="fp32+fp32",
     smooth_k=True,
 )
 ```
@@ -38,7 +38,7 @@ sageattn_qk_fp8_pv_fp8_cuda(
 与官方函数 `sageattn_qk_int8_pv_fp8_cuda` 的主要差异：
 
 1. Q/K 调用 `triton.quant_per_warp_fp8.per_thread_fp8`，而不是 `quant.per_warp_int8`。
-2. 只接受 `qk_quant_gran="per_thread"` 和 `pv_accum_dtype="fp32"`。
+2. 使用 `qk_quant_gran="per_thread"` 和 `pv_accum_dtype="fp32+fp32"`。
 3. Q、K 输出为 `torch.float8_e4m3fn`，scale 为 FP32。
 4. 根据 `smooth_q`、`smooth_v` 选择基础或 mean-fused custom op。
 
