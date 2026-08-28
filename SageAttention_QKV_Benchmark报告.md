@@ -96,6 +96,8 @@ INT8 对照路径使用 `sageattn_qk_int8_pv_fp8_cuda`：Q/K 为 INT8，QK 使�
 
 表 1 中 FP8-only CUDA kernel 的耗时高于 INT8 QK + FP8 PV，主要原因是两者的 QK 硬件路径不同：INT8 路径使用 `IMMA` 执行 INT8×INT8→INT32，整数 Tensor Core 吞吐较高，scale 可在后续阶段处理；FP8-only 路径使用 `QMMA ... F32.E4M3.E4M3` 执行 FP8×FP8→FP32，需要承担 FP32 score 累加、scale 处理以及额外的寄存器和数据搬运开销。两种路径的 PV 都是 FP8 输入、FP32 累加，因此主要性能差异来自 QK；`smooth_q` 和 `smooth_qv` 还增加了均值校正计算，所以耗时进一步上升。
 
+仿真慢不代表 FP8 算法本身慢。纯 PyTorch 仿真需要通过 Python 循环逐块执行 matmul、exp2、规约、类型转换和中间 tensor 创建，算子之间还会产生额外的调度与显存读写开销。真实 CUDA kernel 则将量化、MMA、online softmax、概率 FP8 转换和 PV 累加融合在 GPU 内部，利用 shared memory、寄存器和异步流水完成，因此仿真速度不能用于评价最终 CUDA 算子性能。
+
 表 2 直接比较每个仿真输出和与其配置对应的 CUDA 算子输出。分母是 CUDA 算子输出的 L2 norm；该表不使用 BF16 作为中间参照。
 
 ### 表 2：仿真输出与 CUDA 算子输出的直接交叉验证
@@ -107,8 +109,6 @@ INT8 对照路径使用 `sageattn_qk_int8_pv_fp8_cuda`：Q/K 为 INT8，QK 使�
 | fp8_qk_fp8_pv + smooth_q（仿真 vs 算子） | 0.001816 | 0.001290 | 0.002663 |
 | fp8_qk_fp8_pv + smooth_v（仿真 vs 算子） | 0.001204 | 0.000829 | 0.001652 |
 | fp8_qk_fp8_pv + smooth_qv（仿真 vs 算子） | 0.001204 | 0.000829 | 0.001653 |
-
-仿真慢不代表 FP8 算法本身慢。纯 PyTorch 仿真需要通过 Python 循环逐块执行 matmul、exp2、规约、类型转换和中间 tensor 创建，算子之间还会产生额外的调度与显存读写开销。真实 CUDA kernel 则将量化、MMA、online softmax、概率 FP8 转换和 PV 累加融合在 GPU 内部，利用 shared memory、寄存器和异步流水完成，因此仿真速度不能用于评价最终 CUDA 算子性能。
 
 当前的微小差异来自仿真与 CUDA 算子两条独立执行路径中不同的累加与舍入顺序。CUDA 算子按照固定的 MMA fragment 和 warp 规约顺序执行 E4M3 QK、online softmax 与 E4M3 PV；仿真则将数据反量化后交给 PyTorch matmul 和张量规约。虽然两者使用相同的量化数据和 FP32 accumulator，但浮点加法不满足结合律，不同的运算分块和累加顺序会产生微小的舍入差异，并可能在 probability 转换为 E4M3 时被进一步传播。
 
