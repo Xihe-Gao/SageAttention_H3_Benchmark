@@ -87,7 +87,7 @@ Read the files in this order:
 | 1 | `sageattention/core.py` | `sageattn` |
 | 2 | `sageattention/core.py` | `sageattn_qk_int8_pv_fp8_cuda` |
 | 3 | `sageattention/triton/quant_per_thread.py` | `per_thread_int8` |
-| 4 | `sageattention/triton/quant_per_thread.py` | `per_channel_fp8` |
+| 4 | `sageattention/quant.py` | `per_channel_fp8` |
 | 5 | `csrc/fused/fused.cu` | `QuantInt8Kernel` |
 | 6 | `csrc/fused/fused.cu` | `TransposePadPermuteKernel` |
 | 7 | `csrc/fused/fused.cu` | `MeanScaleKernel` |
