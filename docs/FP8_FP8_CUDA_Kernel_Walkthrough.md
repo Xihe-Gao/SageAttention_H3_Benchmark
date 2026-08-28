@@ -30,7 +30,7 @@ sageattn_qk_fp8_pv_fp8_cuda(
     tensor_layout="HND",
     is_causal=False,
     qk_quant_gran="per_thread",
-    pv_accum_dtype="fp32+fp32",
+    pv_accum_dtype="fp32",
     smooth_k=True,
 )
 ```
@@ -38,7 +38,7 @@ sageattn_qk_fp8_pv_fp8_cuda(
 与官方函数 `sageattn_qk_int8_pv_fp8_cuda` 的主要差异：
 
 1. Q/K 调用 `triton.quant_per_warp_fp8.per_thread_fp8`，而不是 `quant.per_warp_int8`。
-2. 使用 `qk_quant_gran="per_thread"` 和 `pv_accum_dtype="fp32+fp32"`。
+2. 使用 `qk_quant_gran="per_thread"` 和当前源码支持的 `pv_accum_dtype="fp32"`。
 3. Q、K 输出为 `torch.float8_e4m3fn`，scale 为 FP32。
 4. 根据 `smooth_q`、`smooth_v` 选择基础或 mean-fused custom op。
 
@@ -156,7 +156,7 @@ mma::mma_sync_m16n16k32_row_col_f8f8f32(...)
 FP8 probability × FP8 V → FP32 accumulator
 ```
 
-源码中的 `RO` 为 `DTypeSVAccum=float`，因此当前参考路径的 PV 长期累加状态是 FP32。
+源码中的 `RO` 为 `DTypeSVAccum=float`。需要特别注意：FP8 wrapper 虽然复用了官方 INT8+FP8 的通用 `qk_int_sv_f8_attn_kernel` template，但在 launcher 中传入 `use_inst_buffer=false`，因此实际调用的是 `compute_fp8_sv()`，直接将 FP8 PV MMA 结果累加到 `RO`；它不会调用 `compute_fp8_sv_inst_buf()`，也没有 FP32 short-term instruction buffer。`fp32+fp32` 是官方 INT8+FP8 的两级累加配置名，不能据此推断当前 FP8+FP8 wrapper 自动启用了同样的临时缓冲路径。
 
 ## 8. Smooth 选项
 
