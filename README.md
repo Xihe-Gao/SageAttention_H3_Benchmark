@@ -19,17 +19,17 @@ two outputs can be cross-validated.
 
 ## Files
 
-- `SageAttention_QKV_Benchmark报告.md` — Chinese benchmark report
-- `benchmark_sageattention.py` — CUDA kernel benchmark
-- `benchmark_sageattention_sim.py` — full-length simulation benchmark
-- `cross_validate_sim_kernel.py` — direct simulation-vs-kernel comparison
-- `generate_benchmark_report.py` — report generator
-- `capture_config.json`, `workflow_api.json`, `prompt.txt` — capture metadata
+- `docs/SageAttention_QKV_Benchmark报告.md` — Chinese benchmark report
+- `scripts/benchmark_sageattention.py` — CUDA kernel benchmark
+- `scripts/benchmark_sageattention_sim.py` — full-length simulation benchmark
+- `scripts/cross_validate_sim_kernel.py` — direct simulation-vs-kernel comparison
+- `scripts/generate_benchmark_report.py` — report generator
+- `config/capture_config.json`, `config/workflow_api.json`, `config/prompt.txt` — capture metadata
 - `third_party/SageAttention` — SageAttention CUDA/Triton implementation (pinned to `feature/qk-fp8-pv-fp8`)
 - `third_party/SageAttention_Simulation` — independent PyTorch simulation implementation
-- `sageattention_benchmark_results.json` — measured results
+- `results/sageattention_benchmark_results.json` — measured results
 
-The large `captures/` directory contains the raw Q/K/V tensors and is excluded
+The large `data/captures/` directory contains the raw Q/K/V tensors and is excluded
 from Git by design. Store it separately when reproducing the benchmark.
 
 ## Dependencies
@@ -60,11 +60,11 @@ finally compare simulation outputs with matching operator outputs.
 ### 1. Acquire QKV data from ComfyUI
 
 Use the official ComfyUI `MiniMax H3: Text to Video` workflow with the model
-files listed above. Set the capture configuration in `capture_config.json`:
+files listed above. Set the capture configuration in `config/capture_config.json`:
 
 ```json
 {
-  "output_dir": "/path/to/SageAttention_H3_Benchmark/captures",
+  "output_dir": "/path/to/SageAttention_H3_Benchmark/data/captures",
   "steps": [5, 19],
   "layers": [3, 25, 47]
 }
@@ -73,17 +73,17 @@ files listed above. Set the capture configuration in `capture_config.json`:
 Point ComfyUI at this file and run the workflow:
 
 ```bash
-export COMFYUI_QKV_CAPTURE_CONFIG=/path/to/SageAttention_H3_Benchmark/capture_config.json
+export COMFYUI_QKV_CAPTURE_CONFIG=/path/to/SageAttention_H3_Benchmark/config/capture_config.json
 ```
 
 The capture hook saves `q.pt`, `k.pt`, `v.pt`, and `metadata.json` under one
 directory per `(step, layer)`. The tensors are the post-RMSNorm/RoPE Q/K and V
 attention inputs, saved as BF16 in `B,H,S,D` layout. Copy or mount those
-directories into this project's `captures/` directory before benchmarking.
+directories into this project's `data/captures/` directory before benchmarking.
 
-The raw `captures/` directory is intentionally excluded from Git because it is
+The raw `data/captures/` directory is intentionally excluded from Git because it is
 large. The workflow and prompt used for the reference capture are retained as
-`workflow_api.json` and `prompt.txt`.
+`config/workflow_api.json` and `config/prompt.txt`.
 
 ### 2. Run the FP8 algorithm simulation
 
@@ -96,12 +96,12 @@ From this project directory:
 
 ```bash
 PYTHONPATH=/path/to/SageAttention_H3_Benchmark/third_party/SageAttention \
-  python benchmark_sageattention_sim.py
+  python scripts/benchmark_sageattention_sim.py
 ```
 
 This runs each of the five simulation configurations once for every captured
 sample and appends their timing and relative-L2-to-BF16 values to
-`sageattention_benchmark_results.json`.
+`results/sageattention_benchmark_results.json`.
 
 ### 3. Run the FP8 CUDA operator benchmark
 
@@ -114,13 +114,13 @@ cd /path/to/SageAttention_H3_Benchmark/third_party/SageAttention
 python setup.py build_ext --inplace
 cd /path/to/SageAttention_H3_Benchmark
 PYTHONPATH=/path/to/SageAttention_H3_Benchmark/third_party/SageAttention \
-  python benchmark_sageattention.py
+  python scripts/benchmark_sageattention.py
 ```
 
 The benchmark uses CUDA Events, excludes disk I/O and CPU-to-GPU loading, and
 records BF16 SDPA plus the INT8/FP8 CUDA paths (including smooth-q/v variants).
 The resulting per-sample timing and relative L2 values are written to
-`sageattention_benchmark_results.json`.
+`results/sageattention_benchmark_results.json`.
 
 ### 4. Compare simulation outputs with CUDA outputs
 
@@ -128,7 +128,7 @@ Run the direct cross-validation after both sets of results are available:
 
 ```bash
 PYTHONPATH=/path/to/SageAttention_H3_Benchmark/third_party/SageAttention \
-  python cross_validate_sim_kernel.py
+  python scripts/cross_validate_sim_kernel.py
 ```
 
 This computes `||simulation - kernel||₂ / ||kernel||₂` for every sample and
@@ -139,10 +139,10 @@ directly.
 ### 5. Generate the Markdown report
 
 ```bash
-python generate_benchmark_report.py
+python scripts/generate_benchmark_report.py
 ```
 
-The generated `SageAttention_QKV_Benchmark报告.md` contains the data-acquisition
+The generated `docs/SageAttention_QKV_Benchmark报告.md` contains the data-acquisition
 description, simulation and operator implementation notes, test methodology,
 the per-method results, and the simulation-vs-operator cross-validation table.
 

@@ -15,9 +15,9 @@ import torch
 import torch.nn.functional as F
 
 
-ROOT = Path("/workspace/qkv_minimax_h3")
-CAPTURE_ROOT = ROOT / "captures"
-DEFAULT_RESULTS = ROOT / "sageattention_benchmark_results.json"
+ROOT = Path(__file__).resolve().parents[1]
+CAPTURE_ROOT = ROOT / "data/captures"
+DEFAULT_RESULTS = ROOT / "results/sageattention_benchmark_results.json"
 SIM_ROOT = Path(__file__).resolve().parent / "third_party/SageAttention_Simulation/h3_fp8_smoothq_sim"
 sys.path.insert(0, str(SIM_ROOT))
 

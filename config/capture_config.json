@@ -1,0 +1,5 @@
+{
+  "output_dir": "/path/to/SageAttention_H3_Benchmark/data/captures",
+  "steps": [5, 19],
+  "layers": [3, 25, 47]
+}

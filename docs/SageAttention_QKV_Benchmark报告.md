@@ -13,11 +13,11 @@
 - Video VAE：`minimax_h3_video_vae_fp16.safetensors`
 - Audio VAE：`minimax_h3_audio_vae_fp32.safetensors`
 
-完整 prompt 保存在 `prompt.txt`，可执行 API 工作流保存在 `workflow_api.json`。
+完整 prompt 保存在 `config/prompt.txt`，可执行 API 工作流保存在 `config/workflow_api.json`。
 
 ### 1.2 捕获位置和触发方式
 
-QKV 捕获逻辑直接加入 `ComfyUI/comfy/ldm/minimax/model.py`，由环境变量 `COMFYUI_QKV_CAPTURE_CONFIG` 指向 `capture_config.json` 后启用。配置指定 step `[5, 19]` 和 transformer layer `[3, 25, 47]`，两者均采用从 0 开始的索引，因此一共得到 2×3=6 个样本。
+QKV 捕获逻辑直接加入 `ComfyUI/comfy/ldm/minimax/model.py`，由环境变量 `COMFYUI_QKV_CAPTURE_CONFIG` 指向 `config/capture_config.json` 后启用。配置指定 step `[5, 19]` 和 transformer layer `[3, 25, 47]`，两者均采用从 0 开始的索引，因此一共得到 2×3=6 个样本。
 
 每次 MiniMax H3 diffusion forward 开始时，捕获逻辑根据 sigma 序列维护 step 计数；进入 transformer block 循环时记录当前 layer。只有 step 和 layer 同时命中配置才保存，正常推理路径与 attention 计算本身不被替换。
 
@@ -223,11 +223,11 @@ INT8 对照路径使用 `sageattn_qk_int8_pv_fp8_cuda`：Q/K 为 INT8，QK 使�
 
 ## 可复现文件
 
-- 捕获配置：`capture_config.json`
-- ComfyUI API 工作流：`workflow_api.json`
-- Prompt：`prompt.txt`
-- 原始结果：`sageattention_benchmark_results.json`
-- CUDA 算子 Benchmark：`benchmark_sageattention.py`
-- 仿真 Benchmark：`benchmark_sageattention_sim.py`
-- 仿真/算子交叉验证：`cross_validate_sim_kernel.py`
-- 报告生成器：`generate_benchmark_report.py`
+- 捕获配置：`config/capture_config.json`
+- ComfyUI API 工作流：`config/workflow_api.json`
+- Prompt：`config/prompt.txt`
+- 原始结果：`results/sageattention_benchmark_results.json`
+- CUDA 算子 Benchmark：`scripts/benchmark_sageattention.py`
+- 仿真 Benchmark：`scripts/benchmark_sageattention_sim.py`
+- 仿真/算子交叉验证：`scripts/cross_validate_sim_kernel.py`
+- 报告生成器：`scripts/generate_benchmark_report.py`

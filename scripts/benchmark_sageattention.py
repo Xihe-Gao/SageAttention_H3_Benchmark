@@ -17,8 +17,8 @@ from sageattention import (
     sageattn_qk_fp8_pv_fp8_cuda,
 )
 
-CAPTURE_ROOT = Path('/workspace/qkv_minimax_h3/captures')
-RESULT_PATH = Path('/workspace/qkv_minimax_h3/sageattention_benchmark_results.json')
+CAPTURE_ROOT = Path(__file__).resolve().parents[1] / "data/captures"
+RESULT_PATH = Path(__file__).resolve().parents[1] / "results/sageattention_benchmark_results.json"
 EXPECTED = [
     'step_05_layer_03', 'step_05_layer_25', 'step_05_layer_47',
     'step_19_layer_03', 'step_19_layer_25', 'step_19_layer_47',
