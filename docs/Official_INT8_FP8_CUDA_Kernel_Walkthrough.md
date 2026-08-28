@@ -61,7 +61,7 @@ INT8 Q × INT8 K^T
                                   │
                                   └─ E4M3 P × E4M3 V
                                              │
-                                             ├─ FP16 short-term accumulation
+                                             ├─ FP32 short-term accumulation
                                              ├─ FP32 long-term buffer
                                              ├─ normalize by softmax denominator
                                              ├─ apply v_scale
@@ -202,7 +202,7 @@ Then read the launcher `quant_per_thread_int8_cuda` near the lower half of the s
 
 ## 6. FP8 V preprocessing
 
-The Python entry is `per_channel_fp8` in `sageattention/triton/quant_per_thread.py`.
+The Python entry is `per_channel_fp8` in `sageattention/quant.py`.
 
 V is not consumed in its original attention layout. It is transposed so the PV MMA reads contiguous values along the sequence dimension.
 
@@ -533,7 +533,7 @@ Compare it with:
 | --- | --- |
 | `fp32` | direct FP32 accumulation |
 | `fp32+fp32` | FP32 instruction buffer + FP32 long-term buffer |
-| `fp32+fp32` | FP32 instruction buffer + FP32 long-term buffer |
+| `fp32+fp16` | FP16 instruction buffer + FP32 long-term buffer (optional) |
 
 ## 15. Epilogue
 
@@ -638,7 +638,8 @@ From the repository root:
 
 ```bash
 rg -n "def sageattn_qk_int8_pv_fp8_cuda" sageattention/core.py
-rg -n "def per_thread_int8|def per_channel_fp8" sageattention/quant.py
+rg -n "def per_thread_int8" sageattention/triton/quant_per_thread.py
+rg -n "def per_channel_fp8" sageattention/quant.py
 rg -n "QuantInt8Kernel|TransposePadPermuteKernel|MeanScaleKernel" csrc/fused/fused.cu
 rg -n "qk_int_sv_f8_attn_kernel" csrc/qattn
 rg -n "compute_int_qk|update_mdo|RS_32_to_8|compute_fp8_sv|normalize_d" csrc/qattn/attn_utils.cuh
