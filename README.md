@@ -20,6 +20,7 @@ two outputs can be cross-validated.
 ## Files
 
 - `docs/SageAttention_QKV_Benchmark报告.md` — Chinese benchmark report
+- `docs/Official_INT8_FP8_CUDA_Kernel_Walkthrough.md` — Python API → C++ binding → CUDA launcher → kernel source walkthrough
 - `scripts/benchmark_sageattention.py` — CUDA kernel benchmark
 - `scripts/benchmark_sageattention_sim.py` — full-length simulation benchmark
 - `scripts/cross_validate_sim_kernel.py` — direct simulation-vs-kernel comparison
