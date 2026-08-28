@@ -30,17 +30,99 @@ two outputs can be cross-validated.
 The large `captures/` directory contains the raw Q/K/V tensors and is excluded
 from Git by design. Store it separately when reproducing the benchmark.
 
-## Reproduction
+## Step-by-step reproduction
 
-Run inside the SageAttention checkout with the project on `PYTHONPATH`:
+The recommended order follows the report: acquire QKV data first, then run the
+independent FP8 simulation, then benchmark the compiled CUDA operators, and
+finally compare simulation outputs with matching operator outputs.
+
+### 1. Acquire QKV data from ComfyUI
+
+Use the official ComfyUI `MiniMax H3: Text to Video` workflow with the model
+files listed above. Set the capture configuration in `capture_config.json`:
+
+```json
+{
+  "output_dir": "/path/to/SageAttention_H3_Benchmark/captures",
+  "steps": [5, 19],
+  "layers": [3, 25, 47]
+}
+```
+
+Point ComfyUI at this file and run the workflow:
 
 ```bash
-PYTHONPATH=/path/to/SageAttention python benchmark_sageattention.py
-PYTHONPATH=/path/to/SageAttention python benchmark_sageattention_sim.py
-PYTHONPATH=/path/to/SageAttention python cross_validate_sim_kernel.py
+export COMFYUI_QKV_CAPTURE_CONFIG=/path/to/SageAttention_H3_Benchmark/capture_config.json
+```
+
+The capture hook saves `q.pt`, `k.pt`, `v.pt`, and `metadata.json` under one
+directory per `(step, layer)`. The tensors are the post-RMSNorm/RoPE Q/K and V
+attention inputs, saved as BF16 in `B,H,S,D` layout. Copy or mount those
+directories into this project's `captures/` directory before benchmarking.
+
+The raw `captures/` directory is intentionally excluded from Git because it is
+large. The workflow and prompt used for the reference capture are retained as
+`workflow_api.json` and `prompt.txt`.
+
+### 2. Run the FP8 algorithm simulation
+
+The simulation is a pure-PyTorch implementation in
+`SageAttention_Sim/sageattention/h3_fp8_smoothq_sim`. It independently performs
+per-thread Q/K quantization, per-channel V quantization, tiled online softmax,
+FP8 probability conversion, and FP32 PV accumulation.
+
+From this project directory:
+
+```bash
+PYTHONPATH=/path/to/SageAttention \
+  python benchmark_sageattention_sim.py
+```
+
+This runs each of the five simulation configurations once for every captured
+sample and appends their timing and relative-L2-to-BF16 values to
+`sageattention_benchmark_results.json`.
+
+### 3. Run the FP8 CUDA operator benchmark
+
+Build/install the SageAttention checkout first, including the CUDA extension
+for the current GPU. The tested operator configuration is per-thread Q/K
+quantization with FP32 PV accumulation:
+
+```bash
+cd /path/to/SageAttention
+python setup.py build_ext --inplace
+cd /path/to/SageAttention_H3_Benchmark
+PYTHONPATH=/path/to/SageAttention \
+  python benchmark_sageattention.py
+```
+
+The benchmark uses CUDA Events, excludes disk I/O and CPU-to-GPU loading, and
+records BF16 SDPA plus the INT8/FP8 CUDA paths (including smooth-q/v variants).
+The resulting per-sample timing and relative L2 values are written to
+`sageattention_benchmark_results.json`.
+
+### 4. Compare simulation outputs with CUDA outputs
+
+Run the direct cross-validation after both sets of results are available:
+
+```bash
+PYTHONPATH=/path/to/SageAttention \
+  python cross_validate_sim_kernel.py
+```
+
+This computes `||simulation - kernel||₂ / ||kernel||₂` for every sample and
+matching configuration, and stores the values in the same JSON file. It does
+not infer this metric from the two BF16 errors; it compares the output tensors
+directly.
+
+### 5. Generate the Markdown report
+
+```bash
 python generate_benchmark_report.py
 ```
 
+The generated `SageAttention_QKV_Benchmark报告.md` contains the data-acquisition
+description, simulation and operator implementation notes, test methodology,
+the per-method results, and the simulation-vs-operator cross-validation table.
+
 The captured tensors are BF16, layout `B,H,S,D`, shape `[1, 56, 73923, 128]`.
-See the report for hardware, timing semantics, quantization details, and error
-definitions.
