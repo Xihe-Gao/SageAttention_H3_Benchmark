@@ -54,6 +54,8 @@ CUDA 算子实现在独立的 `/workspace/SageAttention` feature branch 中。�
 4. CUDA attention kernel 使用 E4M3 QK MMA 和 FP32 score accumulator，逐 `CTA_K=64` tile 更新 online softmax；probability 转换为 E4M3 后执行 E4M3 PV MMA，并以 FP32 累加输出。
 5. 根据开关分派到基础、fuse_q_mean、fuse_v_mean 或同时融合两者的四个入口，最后写出 BF16/FP16 output。
 
+FP8 QK 使用 FP8 输入和 FP32 累加的证据链是完整且可独立复核的：Python 层将 Q/K 生成为 `torch.float8_e4m3fn`，C++ dispatch 通过 `DataType::kE4M3` 选择 FP8 kernel；在 `compute_int_qk` 中，该类型调用 `mma_sync_m16n16k32_row_col_f8f8f32`，其内联 PTX 为 `mma.sync.aligned.m16n8k32.row.col.f32.e4m3.e4m3.f32`。
+
 INT8 对照路径使用 `sageattn_qk_int8_pv_fp8_cuda`：Q/K 为 INT8，QK 使用整数点积；P/V 仍为 E4M3。本次配置为 `qk_quant_gran=per_thread`、`pv_accum_dtype=fp32`，因此 PV 使用 FP32 accumulator。FP8-only 路径同样使用 per-thread Q/K scale 和 FP32 PV accumulator。
 
 这种独立实现方式是有意的：如果仿真和算子共享量化结果或核心计算代码，二者可能同时继承同一个错误而仍然得到一致结果；独立实现再比较输出，更适合发现分组、scale、平滑校正、padding、累加精度和舍入顺序方面的问题。
